@@ -22,6 +22,11 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # librerías para procesamiento de html (BeautifulSoup)
 from bs4 import BeautifulSoup
+from threading import Thread
+
+import urllib
+import notify2
+import time
 
 class Base():
 
@@ -40,6 +45,7 @@ class Base():
         '''
         self.verbosity = verbosity
         self.time_to_crawl = time_to_crawl
+        notify2.init("OSINTretasNoHayPastebines")
 
     def run(self):
         pass
@@ -51,3 +57,48 @@ class Base():
         '''
         if self.verbosity >= verbosity_required:
             print message
+
+    def print_notification(self,title,message):
+        '''
+            Para mostrar mensajes de notificaciones
+        '''
+        if self.verbosity >= 0:
+            argumento = [title,message]
+            thread = Thread(target = show_notification, args = [argumento])
+            thread.start()
+
+    def check_url(self,url):
+        '''
+            Método para ver si una URL sigue en pie
+            en ese caso la podemos mandar 
+        '''
+        self.print_verbosity("[+] Checkeando si la URL: "+url+" esta online",3)
+        try:
+            if "https://" not in url:
+                url = "https://"+url
+
+            response_code = urllib.urlopen(url).getcode()
+            if response_code == 200:
+                self.print_verbosity("[+] EXISTE",3)
+                return True
+            else:
+                self.print_verbosity("[+] NO EXISTE",3)
+                return False
+        except Exception as e:
+            self.print_verbosity("[+] NO EXISTE",3)
+            return False
+
+def show_notification(args):
+    '''
+        Para ejecutar en un hilo a parte
+    '''
+    title = args[0]
+    message = args[1]
+    n = notify2.Notification(title,
+                     message,
+                     "Pastebin"   # Icon name
+                    )
+    n.show()
+    time.sleep(3)
+    n.close()
+    return
