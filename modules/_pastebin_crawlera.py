@@ -98,7 +98,9 @@ class PastebinCrawler(Base):
             No argumentos propios
         '''
         Base.__init__(self,verbosity,0)
-        self.urls_pastebin = []
+        self.urls_pastebin = set()
+        self.urls_to_search = ["https://pastebin.com/archive","https://pastebin.com/trends"]
+
 
     def run(self):
         '''
@@ -108,23 +110,25 @@ class PastebinCrawler(Base):
 
         self.print_notification("Pastebin Crawler","Arrancado pastebin crawler")
 
-        text = self.get_web_page()
-        if text is None:
-            return None
+        for page in self.urls_to_search:
+            text = self.get_web_page(page)
+            if text is None:
+                return None
+            self.urls_pastebin.update(self.get_pastebin_urls(text))
 
-        self.urls_pastebin = self.get_pastebin_urls(text)
+
         self.print_verbosity("[+] URLs PASTEBIN: "+str(self.urls_pastebin),1)
 
         self.print_notification("Pastebin crawler","Finalizado pastebin crawler, se han conseguido "+str(len(self.urls_pastebin))+" tweets")
         return self.urls_pastebin
 
-    def get_web_page(self):
+    def get_web_page(self,web_page):
         '''
             Obtener toda la página web de pastebin
             y luego empezar a obtener enlaces
         '''
         try:
-            response = requests.get('https://pastebin.com/trends')
+            response = requests.get(web_page)
             if response.status_code == 200:
                 return response.text
             else:
@@ -147,7 +151,10 @@ class PastebinCrawler(Base):
             self.print_verbosity("[+] Obteniendo enlaces tendencias de pastebin",1)
             tableTrends = bsObject.find("table",{"class":'maintable'})
             for link in tableTrends.findAll('a',href=re.compile(regex)):
+                if '/u/' in str(link):
+                    continue
                 self.print_verbosity("[+] Obteniendo enlace de: "+str(link),2)
+
                 if 'href' in link.attrs:
                     url = "pastebin.com" + link['href']
                     self.print_verbosity("[!] Enlace obtenido: "+str(url),3)
@@ -159,6 +166,8 @@ class PastebinCrawler(Base):
             self.print_verbosity("[+] Obteniendo enlaces nuevos de pastebin",1)
             ulNew = bsObject.find('ul',{'class':'right_menu'})
             for link in ulNew.findAll('a',href=re.compile(regex)):
+                if '/u/' in str(link):
+                    continue
                 self.print_verbosity("[+] Obteniendo enlace de: "+str(link),2)
                 if 'href' in link.attrs:
                     url = "pastebin.com" + link['href']
