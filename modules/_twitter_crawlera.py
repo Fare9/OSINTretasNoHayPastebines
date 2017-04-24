@@ -287,5 +287,5 @@ class TwitterCrawler(Base):
         return pastebin_urls
 
 if __name__ == '__main__':
-    tc = TwitterCrawler(2,5,'OSINTPastebin','ojetedevaca',None)
+    tc = TwitterCrawler(3,5,'OSINTPastebin','ojetedevaca',None)
     tc.run()

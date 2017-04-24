@@ -93,13 +93,17 @@ Ascii art from: https://github.com/syntax-samurai/fsociety
 
 class PastebinCrawler(Base):
 
-    def __init__(self,verbosity):
+    def __init__(self,verbosity,urls_to_search):
         '''
             No argumentos propios
         '''
         Base.__init__(self,verbosity,0)
         self.urls_pastebin = set()
-        self.urls_to_search = ["https://pastebin.com/archive","https://pastebin.com/trends"]
+
+        if urls_to_search is None:
+            self.urls_to_search = ["https://pastebin.com/archive","https://pastebin.com/trends"]
+        else:
+            self.urls_to_search = urls_to_search
 
 
     def run(self):
@@ -182,5 +186,5 @@ class PastebinCrawler(Base):
             return None
 
 if __name__ == '__main__':
-    pc = PastebinCrawler(3)
+    pc = PastebinCrawler(3,None)
     pc.run()
