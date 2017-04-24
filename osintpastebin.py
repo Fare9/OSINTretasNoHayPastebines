@@ -12,23 +12,13 @@
 '''
     Librerías que importar 
 '''
-from modules import _pastebin_crawlera
-from modules import _twitter_crawlera
+from modules._pastebin_crawlera import PastebinCrawler
+from modules._twitter_crawlera import TwitterCrawler
 
 import os
 import signal
 import sys
 import time
-
-'''
-    Objetos que tendrán los crawlers
-    con las variables que tenemos
-    globales.
-'''
-twitter_crawler = None
-pastebin_crawler =  None
-
-
 
 
 '''
@@ -46,8 +36,24 @@ emails = []                 # emails a buscar
 names  = []                 # nombres a buscar
 dnis   = []                 # Documentos de identidad a buscar
 cadenas = []                # strings a buscar
+userTwitter = None          # usuario de twitter
+passTwitter = None          # password de twitter
 prompt = "OSINTPASTEBIN >> "
-variables = ["verbosity","time_crawl","regExs","emails","names","dnis","cadenas","prompt","urls","crawlers"]
+variables = ["verbosity","time_crawl","regExs","emails","names","dnis","cadenas","prompt","urls","crawlers","twitterUser","twitterPassword"]
+
+'''
+    Variables de los módulos a cargar,
+    estos serán usados con load y
+    run. Carga con las variables 
+    setteadas
+
+    load <modulo> 
+'''
+twitter_crawler = None
+pastebin_crawler = None
+crawlers = ["twitter","pastebin"]
+
+
 
 '''
     Variables de uso general
@@ -60,6 +66,7 @@ ENDC = '\033[0m'
     estas seran cadenas indicando 
     que cosas puede hacer el usuario
 '''
+
 logo = """
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -149,9 +156,11 @@ total_help = '''
         módulos que actualmente tiene el programa. Para conocer las variables
         disponibles, ejecuta "show" sin argumentos.
         Ejemplo:    show verbosity
+
+        - load: carga módulos con las variables setteadas, existen variables 
+        con valores por defecto.
+        Ejemplo:    load twitter
 '''
-
-
 
 bad_variable = '''
         
@@ -208,7 +217,11 @@ bad_variable = '''
 
             ejemplo: set cadenas archivo.pdf
 
+            + twitterUser: usuario para twitter
+
+            + twitterPassword: password para twitter
 '''
+
 bad_show = '''
 
         Las siguientes variables pueden ser consultadas:
@@ -230,6 +243,22 @@ bad_show = '''
             + urls: las urls ya sacadas de pastebin
 
             + crawlers: crawlers disponibles
+
+            + twitterUser: Usuario para twitter
+
+            + twitterPassword: Password para twitter
+'''
+
+bad_load = '''
+
+        Los siguientes módulos pueden ser cargados:
+
+            - twitter: módulo que ejecuta crawling en twitter para conseguir
+            enlaces de pastebin.
+            Ejemplo:    load twitter
+            - pastebin: módulo que ejecuta crawling en pastebin para conseguir
+            unos pocos enlaces de pastebin.
+            Ejemplo:    load pastebin
 '''
 
 '''
@@ -259,7 +288,7 @@ def _set_variables(command):
     '''
         Funcion para establecer los valores
     '''
-    global verbosity,time_to_crawl,regExs,emails,names,dnis,cadenas,prompt
+    global verbosity,time_to_crawl,regExs,emails,names,dnis,cadenas,prompt,userTwitter,passTwitter
 
     command_list = command.split(" ") 
     # tomaremos ya que el primer comando es set
@@ -275,7 +304,7 @@ def _set_variables(command):
             print bad_variable
             return -1
 
-        else:
+        else: #,"twitterPassword"
             if variable_to_change == "verbosity":
                 try:
                     verbosidad = int(command_list[2])
@@ -305,6 +334,13 @@ def _set_variables(command):
                 else:
                     prompt = transform_args(command_list[2:])
                     prompt += " "
+
+            elif variable_to_change == "twitterUser":
+                userTwitter = transform_args(command_list[2:])
+
+            elif variable_to_change == "twitterPassword":
+                passTwitter = transform_args(command_list[2:])
+
             # variables que aceptan ficheros
             elif variable_to_change == "regExs":
                 if str(command_list[2]) == "f":
@@ -418,13 +454,19 @@ def _show_variables(command):
             print "[-] La variable "+variable_to_show+" no está en las variables del programa"
             print bad_show
             return -1
-        else:
-            #variables = ["verbosity","time_crawl","regExs","emails","names","dnis","cadenas","prompt","pastebin_urls"]
+        else: 
+
             if variable_to_show == "verbosity":
                 print "verbosity="+str(verbosity)
 
             elif variable_to_show == "time_crawl":
                 print "time to crawl="+str(time_to_crawl)
+
+            elif variable_to_show == "twitterUser":
+                print "Usuario twitter="+str(userTwitter)
+
+            elif variable_to_show == "twitterPassword":
+                print "Contraseña twitter="+str(passTwitter)
 
             elif variable_to_show == "regExs":
                 print "Lista de expresiones regulares: "
@@ -458,8 +500,8 @@ def _show_variables(command):
 
             elif variable_to_show == 'crawlers':
                 print "Lista de crawlers: "
-                print "\t- twitter_crawler"
-                print "\t- pastebin_crawler"
+                print "\t- twitter"
+                print "\t- pastebin"
 
             else:
                 print bad_show
@@ -467,6 +509,66 @@ def _show_variables(command):
     except IndexError:
         print "[-] Número de argumentos no valido"
         print bad_show
+        return -1
+
+def _load_crawlers(command):
+    '''
+        Función para cargar los crawlers con los objetos.
+    '''
+    global twitter_crawler,pastebin_crawler
+
+    try:
+        command_list = command.split(" ")
+
+        crawler = command_list[1]
+
+        if crawler not in crawlers:
+            print "[-] El módulo "+crawler+" no está en los módulos del programa"
+            print bad_load
+            return -1
+        else:
+            #crawlers = ["twitter","pastebin"]
+            if crawler == "twitter":
+                if userTwitter is None or passTwitter is None:
+                    print "[-] Credenciales para twitter son necesarias"
+                    return -1
+                twitter_crawler = TwitterCrawler(verbosity,time_to_crawl,userTwitter,passTwitter,None)
+            elif crawler == "pastebin":
+                pastebin_crawler = PastebinCrawler(verbosity,None)
+
+    except IndexError:
+        print "[-] Número de argumentos no valido"
+        print bad_load
+        return -1
+
+def _run_crawlers(command):
+    '''
+        Funcion para ejecutar los crawlers
+    '''
+    try:
+        command_list = command.split(" ")
+
+        crawler = command_list[1]
+
+        if crawler not in crawlers:
+            print "[-] El módulo "+crawler+" no está en los módulos del programa"
+            print bad_load
+            return -1
+        else:
+            #crawlers = ["twitter","pastebin"]
+            if crawler == "twitter":
+                try:
+                    pastebin_urls.update(twitter_crawler.run())
+                except Exception as e:
+                    print "[-] Error al ejecutar crawler de twitter: "+str(e)
+            elif crawler == "pastebin":
+                try:
+                    pastebin_urls.update(pastebin_crawler.run())
+                except  Exception as e:
+                    print "[-] Error al ejecutar crawler de pastebin: "+str(e)
+
+    except IndexError:
+        print "[-] Número de argumentos no valido"
         return -1
 
 
@@ -507,6 +609,18 @@ def main():
 
         elif command.startswith("clear"):
             os.system("clear")
+
+        elif command.startswith("load"):
+            try:
+                _load_crawlers(command)
+            except Exception as e:
+                print "[-] Error en la shell: "+str(e)
+
+        elif command.startswith("run"):
+            try:
+                _run_crawlers(command)
+            except Exception as e:
+                print "[-] Error en la shell: "+str(e)
 
         else:
             if command.startswith("help"):
