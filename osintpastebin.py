@@ -41,11 +41,11 @@ pastebin_crawler =  None
 verbosity = 1               # verbosidad del programa
 time_to_crawl = 10          # tiempo de crawling
 pastebin_urls = set()       # urls de pastebin
-regExs = None               # expresiones regulares a buscar
-emails = None               # emails a buscar
-names  = None               # nombres a buscar
-dnis   = None               # Documentos de identidad a buscar
-cadenas = None              # strings a buscar
+regExs = []                 # expresiones regulares a buscar
+emails = []                 # emails a buscar
+names  = []                 # nombres a buscar
+dnis   = []                 # Documentos de identidad a buscar
+cadenas = []                # strings a buscar
 prompt = "OSINTPASTEBIN >> "
 variables = ["verbosity","time_crawl","regExs","emails","names","dnis","cadenas","prompt","urls","crawlers"]
 
@@ -493,23 +493,23 @@ def main():
 
     while command.strip().lower() not in ["exit","quit"]:
 
-        if command.strip().startswith("set"):
+        if command.startswith("set"):
             try:
-                _set_variables(command.strip())
+                _set_variables(command)
             except Exception as e:
                 print "[-] Error en la shell: "+str(e)
 
-        if command.strip().startswith("show"):
+        elif command.startswith("show"):
             try:
-                _show_variables(command.strip())
+                _show_variables(command)
             except Exception as e:
                 print "[-] Error en la shell: "+str(e)
 
-        elif command.strip().startswith("clear"):
+        elif command.startswith("clear"):
             os.system("clear")
 
         else:
-            if command.strip().startswith("help"):
+            if command.startswith("help"):
                 print total_help
             else:
                 print "[-] El comando ejecutado no existe, prueba con help"
