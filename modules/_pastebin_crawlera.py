@@ -156,6 +156,12 @@ class PastebinCrawler(Base):
             tableTrends = bsObject.find("table",{"class":'maintable'})
             for link in tableTrends.findAll('a',href=re.compile(regex)):
                 if '/u/' in str(link):
+
+                    user_link = "https://pastebin.com" + link['href']
+                    if user_link not in self.urls_to_search:
+                        self.print_verbosity("[+] Añadido a urls_to_search: "+str(user_link),3)
+                        self.urls_to_search.append(user_link)
+
                     continue
                 self.print_verbosity("[+] Obteniendo enlace de: "+str(link),2)
 
@@ -171,6 +177,10 @@ class PastebinCrawler(Base):
             ulNew = bsObject.find('ul',{'class':'right_menu'})
             for link in ulNew.findAll('a',href=re.compile(regex)):
                 if '/u/' in str(link):
+                    user_link = "https://pastebin.com" + link['href']
+                    if user_link not in self.urls_to_search:
+                        self.print_verbosity("[+] Añadido a urls_to_search: "+str(user_link),3)
+                        self.urls_to_search.append(user_link)
                     continue
                 self.print_verbosity("[+] Obteniendo enlace de: "+str(link),2)
                 if 'href' in link.attrs:
