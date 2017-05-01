@@ -30,6 +30,7 @@ import time
 '''
 verbosity = 1               # verbosidad del programa
 time_to_crawl = 10          # tiempo de crawling
+use_tor = False             # usar o no TOR
 pastebin_urls = set()       # urls de pastebin
 regExs = []                 # expresiones regulares a buscar
 emails = []                 # emails a buscar
@@ -39,7 +40,7 @@ cadenas = []                # strings a buscar
 userTwitter = None          # usuario de twitter
 passTwitter = None          # password de twitter
 prompt = "OSINTPASTEBIN >> "
-variables = ["verbosity","time_crawl","regExs","emails","names","dnis","cadenas","prompt","urls","crawlers","twitterUser","twitterPassword"]
+variables = ["use_tor","verbosity","time_crawl","regExs","emails","names","dnis","cadenas","prompt","urls","crawlers","twitterUser","twitterPassword"]
 
 '''
     Variables de los módulos a cargar,
@@ -168,6 +169,10 @@ bad_variable = '''
         con los siguientes valores:
             + prompt: prompt que mostrar en la consola, si se deja en blanco usamos el normal
 
+            + use_tor: usar o no la red tor para checkear las URLs
+
+            ejemplo: set use_tor true
+
             + verbosity: verbosidad del programa, cuanta información mostrar
             |
             |------------> -1 = No mostrar nada de información
@@ -225,6 +230,7 @@ bad_variable = '''
 bad_show = '''
 
         Las siguientes variables pueden ser consultadas:
+            + use_tor: uso o no de tor en el check de urls
 
             + verbosity: verbosidad del programa, cuanta información mostrar
 
@@ -288,7 +294,7 @@ def _set_variables(command):
     '''
         Funcion para establecer los valores
     '''
-    global verbosity,time_to_crawl,regExs,emails,names,dnis,cadenas,prompt,userTwitter,passTwitter
+    global use_tor,verbosity,time_to_crawl,regExs,emails,names,dnis,cadenas,prompt,userTwitter,passTwitter
 
     command_list = command.split(" ") 
     # tomaremos ya que el primer comando es set
@@ -318,6 +324,14 @@ def _set_variables(command):
                     print "[-] La verbosidad debe ser un número"
                     print bad_variable
                     return -1
+                    
+            elif variable_to_change == "use_tor":
+                if command_list[2] == "true":
+                    use_tor = True
+                elif command_list[2] == "false":
+                    use_tor = False
+                else:
+                    print "[-] use_tor debe ser True o False"
 
             elif variable_to_change == 'time_crawl':
                 try:
@@ -458,7 +472,11 @@ def _show_variables(command):
 
             if variable_to_show == "verbosity":
                 print "verbosity="+str(verbosity)
-
+            elif variable_to_show == "use_tor":
+                if use_tor:
+                    print "use_tor=true"
+                else:
+                    print "use_tor=false"
             elif variable_to_show == "time_crawl":
                 print "time to crawl="+str(time_to_crawl)
 
@@ -532,9 +550,9 @@ def _load_crawlers(command):
                 if userTwitter is None or passTwitter is None:
                     print "[-] Credenciales para twitter son necesarias"
                     return -1
-                twitter_crawler = TwitterCrawler(verbosity,time_to_crawl,userTwitter,passTwitter,None)
+                twitter_crawler = TwitterCrawler(verbosity,time_to_crawl,use_tor,userTwitter,passTwitter,None)
             elif crawler == "pastebin":
-                pastebin_crawler = PastebinCrawler(verbosity,None)
+                pastebin_crawler = PastebinCrawler(verbosity,use_tor,None,time_to_crawl)
 
     except IndexError:
         print "[-] Número de argumentos no valido"
