@@ -106,13 +106,13 @@ Ascii art from: https://github.com/syntax-samurai/fsociety
 
 class TwitterCrawler(Base):
 
-    def __init__(self,verbosity,time_to_crawl,user,password,look_for):
+    def __init__(self,verbosity,time_to_crawl,use_tor,user,password,look_for):
         '''
             +   user = nombre de usuario en twitter
             +   password = password en twitter
             +   look_for = cadenas que mirar
         '''
-        Base.__init__(self,verbosity,time_to_crawl)
+        Base.__init__(self,verbosity,time_to_crawl,use_tor)
         self.user = user
         self.password = password
         self.driver = None

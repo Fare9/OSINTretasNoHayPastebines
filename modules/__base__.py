@@ -23,6 +23,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # librerías para procesamiento de html (BeautifulSoup)
 from bs4 import BeautifulSoup
 from threading import Thread
+from torrequest import TorRequest # para tor
 
 import urllib
 import notify2
@@ -30,7 +31,7 @@ import time
 
 class Base():
 
-    def __init__(self,verbosity=1,time_to_crawl=10):
+    def __init__(self,verbosity=1,time_to_crawl=10,use_tor=False):
         '''
             +   verbosity = nivel de verbosidad en los mensajes
             |
@@ -45,6 +46,7 @@ class Base():
         '''
         self.verbosity = verbosity
         self.time_to_crawl = time_to_crawl
+        self.use_tor = use_tor
         notify2.init("OSINTretasNoHayPastebines")
 
     def run(self):
@@ -77,15 +79,20 @@ class Base():
             if "https://" not in url:
                 url = "https://"+url
 
-            response_code = urllib.urlopen(url).getcode()
+            if not self.use_tor:
+                response_code = urllib.urlopen(url).getcode()
+            else:
+                with TorRequest() as tr:
+                    response_code = tr.get(url).status_code
+
             if response_code == 200:
                 self.print_verbosity("[+] EXISTE",3)
                 return True
             else:
-                self.print_verbosity("[+] NO EXISTE",3)
+                self.print_verbosity("[+] NO EXISTE: "+str(response_code),3)
                 return False
         except Exception as e:
-            self.print_verbosity("[+] NO EXISTE",3)
+            self.print_verbosity("[+] NO EXISTE: "+str(e),3)
             return False
 
 def show_notification(args):
