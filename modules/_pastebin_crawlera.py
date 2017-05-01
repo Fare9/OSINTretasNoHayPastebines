@@ -15,6 +15,7 @@ from __base__ import *
 
 import requests
 import re
+import time
 
 logo = '''
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -93,11 +94,11 @@ Ascii art from: https://github.com/syntax-samurai/fsociety
 
 class PastebinCrawler(Base):
 
-    def __init__(self,verbosity,urls_to_search):
+    def __init__(self,verbosity,use_tor,urls_to_search,time_to_crawl):
         '''
             No argumentos propios
         '''
-        Base.__init__(self,verbosity,0)
+        Base.__init__(self,verbosity,time_to_crawl,use_tor)
         self.urls_pastebin = set()
 
         if urls_to_search is None:
@@ -114,12 +115,18 @@ class PastebinCrawler(Base):
 
         self.print_notification("Pastebin Crawler","Arrancado pastebin crawler")
 
+        actualTime = time.time()
+
+
         for page in self.urls_to_search:
+
             text = self.get_web_page(page)
             if text is None:
                 return None
             self.urls_pastebin.update(self.get_pastebin_urls(text))
-
+            if self.time_to_crawl != -1:
+                if (time.time() - actualTime) >= float(self.time_to_crawl):
+                    break
 
         self.print_verbosity("[+] URLs PASTEBIN: "+str(self.urls_pastebin),1)
 
@@ -132,11 +139,15 @@ class PastebinCrawler(Base):
             y luego empezar a obtener enlaces
         '''
         try:
-            response = requests.get(web_page)
+            if not self.use_tor:
+                response = requests.get(web_page)
+            else:
+                with TorRequest() as tr:
+                    response = tr.get(web_page)
             if response.status_code == 200:
                 return response.text
             else:
-                self.print_verbosity("[-] ERROR GET_WEB_PAGE response status not 200")
+                self.print_verbosity("[-] ERROR GET_WEB_PAGE response status not 200: "+str(web_page),0)
                 return None
         except Exception as e:
             self.print_verbosity("[-] ERROR GET_WEB_PAGE: "+str(e),0)
@@ -150,6 +161,14 @@ class PastebinCrawler(Base):
         try:
             bsObject = BeautifulSoup(text,"html5lib")
             regex = r"\/[a-zA-Z1-9]{8}"
+
+            # para buscar distintas index en la página de usuario
+            user_page_regex = r"\/u/.+/[0-9]+"
+            for link in bsObject.findAll('a',href=re.compile(user_page_regex)):
+                user_link = "https://pastebin.com" + link['href']
+                if user_link not in self.urls_to_search:
+                    self.print_verbosity("[+] Añadido a urls_to_search: "+str(user_link),3)
+                    self.urls_to_search.append(user_link)
 
             # primero vamos a obtener las tendencias
             self.print_verbosity("[+] Obteniendo enlaces tendencias de pastebin",1)
