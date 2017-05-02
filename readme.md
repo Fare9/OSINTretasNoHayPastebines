@@ -36,8 +36,13 @@ futuro archivo crawler: modules/_google_crawlera.py
 
 ### Requerimientos
 
+#### Paquetes Linux
 Python 2.7
 geckodriver dentro de la carpeta opt
+tor
+
+#### Paquetes python
 selenium
 bs4
 notify2
+torrequest
