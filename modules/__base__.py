@@ -25,7 +25,7 @@ from bs4 import BeautifulSoup
 from threading import Thread
 from torrequest import TorRequest # para tor
 
-import urllib
+import requests
 import notify2
 import time
 
@@ -80,7 +80,7 @@ class Base():
                 url = "https://"+url
 
             if not self.use_tor:
-                response_code = urllib.urlopen(url).getcode()
+                response_code = requests.get(url).status_code
             else:
                 with TorRequest() as tr:
                     response_code = tr.get(url).status_code
