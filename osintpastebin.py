@@ -14,11 +14,13 @@
 '''
 from modules._pastebin_crawlera import PastebinCrawler
 from modules._twitter_crawlera import TwitterCrawler
+from modules._seeker_picker import Seeker_Picker
 
 import os
 import signal
 import sys
 import time
+import pprint
 
 
 '''
@@ -28,19 +30,22 @@ import time
 
         set <variable> valores
 '''
-verbosity = 1               # verbosidad del programa
-time_to_crawl = 10          # tiempo de crawling
-use_tor = False             # usar o no TOR
 pastebin_urls = set()       # urls de pastebin
 regExs = []                 # expresiones regulares a buscar
 emails = []                 # emails a buscar
 names  = []                 # nombres a buscar
 dnis   = []                 # Documentos de identidad a buscar
 cadenas = []                # strings a buscar
+reconocimientos = {}        # lo que hemos encontrado en pastebin
+
+verbosity = 1               # verbosidad del programa
+time_to_crawl = 10          # tiempo de crawling
+use_tor = False             # usar o no TOR
 userTwitter = None          # usuario de twitter
 passTwitter = None          # password de twitter
 prompt = "OSINTPASTEBIN >> "
-variables = ["use_tor","verbosity","time_crawl","regExs","emails","names","dnis","cadenas","prompt","urls","crawlers","twitterUser","twitterPassword"]
+variables = ["use_tor","verbosity","time_crawl","regExs","emails","names","dnis",
+            "cadenas","prompt","urls","crawlers","twitterUser","twitterPassword","reconocimientos"]
 
 '''
     Variables de los módulos a cargar,
@@ -50,6 +55,7 @@ variables = ["use_tor","verbosity","time_crawl","regExs","emails","names","dnis"
 
     load <modulo> 
 '''
+seeker_picker = None
 twitter_crawler = None
 pastebin_crawler = None
 crawlers = ["twitter","pastebin"]
@@ -161,6 +167,10 @@ total_help = '''
         - load: carga módulos con las variables setteadas, existen variables 
         con valores por defecto.
         Ejemplo:    load twitter
+
+        - search: Busca los patrones y cadenas indicadas con set dentro del
+        código de las URL de pastebein.
+        Ejemplo:    search
 '''
 
 bad_variable = '''
@@ -253,6 +263,8 @@ bad_show = '''
             + twitterUser: Usuario para twitter
 
             + twitterPassword: Password para twitter
+
+            + reconocimientos: URLs encontradas que matchean con expresiones y cadenas dadas
 '''
 
 bad_load = '''
@@ -369,7 +381,7 @@ def _set_variables(command):
                     regExs = []
                     regExs = data
                 elif str(command_list[2]) == "d":
-                    regExs = [transform_args(command_list[3:])]
+                    regExs = command_list[3:]
                 else:
                     print "[-] Comando no valido"
                     print bad_variable
@@ -388,7 +400,7 @@ def _set_variables(command):
                     emails = []
                     emails = data
                 elif str(command_list[2]) == "d":
-                    emails = [transform_args(command_list[3:])]
+                    emails = command_list[3:]
                 else:
                     print "[-] Comando no valido"
                     print bad_variable
@@ -407,7 +419,7 @@ def _set_variables(command):
                     names = []
                     names = data
                 elif str(command_list[2]) == "d":
-                    names = [transform_args(command_list[3:])]
+                    names = command_list[3:]
                 else:
                     print "[-] Comando no valido"
                     print bad_variable
@@ -426,7 +438,7 @@ def _set_variables(command):
                     dnis = []
                     dnis = data
                 elif str(command_list[2]) == "d":
-                    dnis = [transform_args(command_list[3:])]
+                    dnis = command_list[3:]
                 else:
                     print "[-] Comando no valido"
                     print bad_variable
@@ -445,7 +457,7 @@ def _set_variables(command):
                     cadenas = []
                     cadenas = data
                 elif str(command_list[2]) == "d":
-                    cadenas = [transform_args(command_list[3:])]
+                    cadenas = command_list[3:]
                 else:
                     print "[-] Comando no valido"
                     print bad_variable
@@ -520,6 +532,9 @@ def _show_variables(command):
                 print "Lista de crawlers: "
                 print "\t- twitter"
                 print "\t- pastebin"
+
+            elif variable_to_show == 'reconocimientos':
+                pprint.pprint(reconocimientos)
 
             else:
                 print bad_show
@@ -640,6 +655,12 @@ def main():
             except Exception as e:
                 print "[-] Error en la shell: "+str(e)
 
+        elif command.startswith("search"):
+            try:
+                seeker_picker = Seeker_Picker(verbosity,pastebin_urls,regExs,emails,names,dnis,cadenas,use_tor)
+                reconocimientos = seeker_picker.run()
+            except Exception as e:
+                print "[-] Error en la shell: "+str(e)
         else:
             if command.startswith("help"):
                 print total_help
