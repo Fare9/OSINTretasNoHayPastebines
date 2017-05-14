@@ -77,8 +77,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                                                                      .o...P'
 
 
-Pastebin crawler to get some URLs from mainpage, we can't take too much, 
-but maybe it's something
+Module to search in pastebin webpages some strings, regEx, names, emails...
 
 @author: Fare9
 @mail: farenain9(at)gmail(dot)com
