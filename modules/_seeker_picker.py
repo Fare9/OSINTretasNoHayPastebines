@@ -96,7 +96,7 @@ import notify2
 import time
 import re
 from threading import Thread
-
+from torrequest import TorRequest # para tor
 
 class Seeker_Picker():
 
@@ -124,6 +124,8 @@ class Seeker_Picker():
 
         self.print_notification("Seeker_picker","Finished module")
 
+        return self.retorned_dict
+
     def print_verbosity(self,message,verbosity_required):
         '''
             Mostramos según verbosidad (importancia)
@@ -144,16 +146,24 @@ class Seeker_Picker():
             self.print_verbosity("[+] Requesting for pastebin raw url: "+urlRaw,3)
 
             try:
-                if use_tor:
+                if self.use_tor:
                     with TorRequest() as tr:
+                        contador = 0 
                         response = tr.get(urlRaw)
+                        while response.status_code != 200:
+                            response = tr.get(urlRaw)
+                            contador += 1
+                            if contador == 3:
+                                break
+                        if contador == 3:
+                            continue
                 else:
                     response = requests.get(urlRaw)
             except Exception as e:
-                self.print_verbosity("[-] Failed to get url: "+str(url),2)
+                self.print_verbosity("[-] Failed to get url: "+str(url)+" error: "+str(e),2)
                 continue
 
-            code_page = str(response.text)
+            code_page = response.text
 
             if response.status_code == 200: # si la vuelta es 200 perfecto
 
@@ -212,7 +222,7 @@ class Seeker_Picker():
                 # Fin DNIs
                 # Cadenas
                 self.retorned_dict['strings'] = {}
-                for cadena in cadenas:
+                for cadena in self.cadenas:
                     if cadena in code_page:
                         try:
                             if type(self.retorned_dict['strings'][cadena]) == 'list':
@@ -247,3 +257,9 @@ def show_notification(args):
     time.sleep(3)
     n.close()
     return
+
+if __name__=='__main__':
+
+    sk = Seeker_Picker(3,['pastebin.com/skQpwccy'],[],[],[],[],['malware','exploit','IOC','pass','password','WWE','MOVIES'],True)
+
+    print sk.run()
