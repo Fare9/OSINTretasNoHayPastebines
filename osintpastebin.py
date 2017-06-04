@@ -15,64 +15,16 @@
 from modules._pastebin_crawlera import PastebinCrawler
 from modules._twitter_crawlera import TwitterCrawler
 from modules._seeker_picker import Seeker_Picker
+from modules._google_crawlera import GoogleCrawler
+from modules._bing_crawlera import BingCrawler
 
 import os
 import signal
 import sys
 import time
 import pprint
-
-
-'''
-    Variables globales a modificar,
-    estas variables serán modificadas
-    por la consola con el comando:
-
-        set <variable> valores
-'''
-pastebin_urls = set()       # urls de pastebin
-regExs = []                 # expresiones regulares a buscar
-emails = []                 # emails a buscar
-names  = []                 # nombres a buscar
-dnis   = []                 # Documentos de identidad a buscar
-cadenas = []                # strings a buscar
-reconocimientos = {}        # lo que hemos encontrado en pastebin
-
-verbosity = 1               # verbosidad del programa
-time_to_crawl = 10          # tiempo de crawling
-use_tor = False             # usar o no TOR
-userTwitter = None          # usuario de twitter
-passTwitter = None          # password de twitter
-prompt = "OSINTPASTEBIN >> "
-variables = ["use_tor","verbosity","time_crawl","regExs","emails","names","dnis",
-            "cadenas","prompt","urls","crawlers","twitterUser","twitterPassword","reconocimientos"]
-
-'''
-    Variables de los módulos a cargar,
-    estos serán usados con load y
-    run. Carga con las variables 
-    setteadas
-
-    load <modulo> 
-'''
-seeker_picker = None
-twitter_crawler = None
-pastebin_crawler = None
-crawlers = ["twitter","pastebin"]
-
-
-
-'''
-    Variables de uso general
-'''
-OKBLUE = '\033[94m'
-ENDC = '\033[0m'
-
-'''
-    Ayudas que podran servir al usuario,
-    estas seran cadenas indicando 
-    que cosas puede hacer el usuario
-'''
+import numpy # para guardar los datos
+import json  # para guardar los datos
 
 logo = """
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -149,6 +101,64 @@ Ascii art from: https://github.com/syntax-samurai/fsociety
 """
 
 
+'''
+    Variables globales a modificar,
+    estas variables serán modificadas
+    por la consola con el comando:
+
+        set <variable> valores
+'''
+pastebin_urls = set()       # urls de pastebin
+regExs = []                 # expresiones regulares a buscar
+emails = []                 # emails a buscar
+names  = []                 # nombres a buscar
+dnis   = []                 # Documentos de identidad a buscar
+cadenas = []                # strings a buscar
+reconocimientos = {}        # lo que hemos encontrado en pastebin
+
+verbosity = 1               # verbosidad del programa
+time_to_crawl = 10          # tiempo de crawling
+use_tor = False             # usar o no TOR
+userTwitter = None          # usuario de twitter
+passTwitter = None          # password de twitter
+pages_to_crawl = 100        # Nº de URLs a buscar con google
+prompt = "OSINTPASTEBIN >> "
+variables = ["use_tor","verbosity","time_crawl","regExs","emails","names","dnis",
+            "cadenas","prompt","urls","crawlers","twitterUser","twitterPassword","reconocimientos",
+            "pages_to_crawl"]
+
+'''
+    Variables de los módulos a cargar,
+    estos serán usados con load y
+    run. Carga con las variables 
+    setteadas
+
+    load <modulo> 
+'''
+seeker_picker = None
+twitter_crawler = None
+pastebin_crawler = None
+google_crawler = None
+bing_crawler = None
+crawlers = ["twitter","pastebin","google","bing"]
+
+
+
+'''
+    Variables de uso general
+'''
+OKBLUE = '\033[94m'
+ENDC = '\033[0m'
+
+'''
+    Ayudas que podran servir al usuario,
+    estas seran cadenas indicando 
+    que cosas puede hacer el usuario
+'''
+
+
+
+
 total_help = '''
     
     Bienvenido a OSINTretasNoHayPastebines, supongo que habrás escrito help,
@@ -171,6 +181,14 @@ total_help = '''
         - search: Busca los patrones y cadenas indicadas con set dentro del
         código de las URL de pastebein.
         Ejemplo:    search
+
+        - save: Guarda los datos de urls o de reconocimientos de pastebin en
+        archivos para mantener persistencia.
+        Ejemplo: save urls
+
+        - get: Obtiene las urls guardadas en un archivo, así tenemos persistencia
+        ante las URLs las cuales lleva tiempo conseguir.
+        Ejemplo: get archivo_urls.npy
 '''
 
 bad_variable = '''
@@ -235,6 +253,8 @@ bad_variable = '''
             + twitterUser: usuario para twitter
 
             + twitterPassword: password para twitter
+
+            + pages_to_crawl: número de páginas a buscar por google o bing
 '''
 
 bad_show = '''
@@ -265,6 +285,8 @@ bad_show = '''
             + twitterPassword: Password para twitter
 
             + reconocimientos: URLs encontradas que matchean con expresiones y cadenas dadas
+
+            + pages_to_crawl: Número de URLs a buscar por google o bing
 '''
 
 bad_load = '''
@@ -277,8 +299,24 @@ bad_load = '''
             - pastebin: módulo que ejecuta crawling en pastebin para conseguir
             unos pocos enlaces de pastebin.
             Ejemplo:    load pastebin
+            - google: módulo que ejecuta crawling en google para conseguir
+            enlaces de pastebin.
+            Ejemplo:    load google
+            - bing: módulo que ejecuta crawling en bing para conseguir
+            enlaces de pastebin.
+            Ejemplo:    load bing
 '''
 
+bad_save = '''
+        Las siguientes opciones valen para save:
+
+            - urls: guarda las urls encontradas.
+            Usa un formato de numpy para guardarlo mejor.
+            Ejemplo: save urls
+            - founds: guarda los reconocimientos encontrados en pastebin.
+            Usa formato JSON para usarlo con otras herramientas.
+            Ejemplo: save founds
+'''
 '''
     Funciones a utilizar
 '''
@@ -306,7 +344,7 @@ def _set_variables(command):
     '''
         Funcion para establecer los valores
     '''
-    global use_tor,verbosity,time_to_crawl,regExs,emails,names,dnis,cadenas,prompt,userTwitter,passTwitter
+    global use_tor,verbosity,time_to_crawl,regExs,emails,names,dnis,cadenas,prompt,userTwitter,passTwitter,pages_to_crawl
 
     command_list = command.split(" ") 
     # tomaremos ya que el primer comando es set
@@ -322,7 +360,7 @@ def _set_variables(command):
             print bad_variable
             return -1
 
-        else: #,"twitterPassword"
+        else: 
             if variable_to_change == "verbosity":
                 try:
                     verbosidad = int(command_list[2])
@@ -336,7 +374,19 @@ def _set_variables(command):
                     print "[-] La verbosidad debe ser un número"
                     print bad_variable
                     return -1
-                    
+
+            elif variable_to_change == "pages_to_crawl":
+                try:
+                    pages_to_crawl = int(command_list[2])
+                    if pages_to_crawl < 0 or pages_to_crawl > 300:
+                        print "[-] Pages_to_crawl debe estar entre 0 y 300"
+                        print bad_variable
+                        return -1
+                except:
+                    print "[-] pages_to_crawl debe ser un número"
+                    print bad_variable
+                    return -1
+
             elif variable_to_change == "use_tor":
                 if command_list[2] == "true":
                     use_tor = True
@@ -530,11 +580,14 @@ def _show_variables(command):
 
             elif variable_to_show == 'crawlers':
                 print "Lista de crawlers: "
-                print "\t- twitter"
-                print "\t- pastebin"
+                for element in crawlers:
+                    print "\t- "+str(element)
 
             elif variable_to_show == 'reconocimientos':
                 pprint.pprint(reconocimientos)
+
+            elif variable_to_show == 'pages_to_crawl':
+                print "pages_to_crawl="+str(pages_to_crawl)
 
             else:
                 print bad_show
@@ -548,7 +601,7 @@ def _load_crawlers(command):
     '''
         Función para cargar los crawlers con los objetos.
     '''
-    global twitter_crawler,pastebin_crawler
+    global twitter_crawler,pastebin_crawler,google_crawler,bing_crawler
 
     try:
         command_list = command.split(" ")
@@ -566,8 +619,15 @@ def _load_crawlers(command):
                     print "[-] Credenciales para twitter son necesarias"
                     return -1
                 twitter_crawler = TwitterCrawler(verbosity,time_to_crawl,use_tor,userTwitter,passTwitter,None)
+
             elif crawler == "pastebin":
                 pastebin_crawler = PastebinCrawler(verbosity,use_tor,None,time_to_crawl)
+
+            elif crawler == "google":
+                google_crawler = GoogleCrawler(verbosity,pages_to_crawl,None,use_tor)
+
+            elif crawler == "bing":
+                bing_crawler = BingCrawler(verbosity,pages_to_crawl,None,use_tor)
 
     except IndexError:
         print "[-] Número de argumentos no valido"
@@ -588,7 +648,6 @@ def _run_crawlers(command):
             print bad_load
             return -1
         else:
-            #crawlers = ["twitter","pastebin"]
             if crawler == "twitter":
                 try:
                     pastebin_urls.update(twitter_crawler.run())
@@ -599,9 +658,73 @@ def _run_crawlers(command):
                     pastebin_urls.update(pastebin_crawler.run())
                 except  Exception as e:
                     print "[-] Error al ejecutar crawler de pastebin: "+str(e)
-
+            elif crawler == "google":
+                try:
+                    pastebin_urls.update(google_crawler.run())
+                except Exception as e:
+                    print "[-] Error al ejecutar crawler de google: "+str(e)
+            elif crawler == "bing":
+                try:
+                    pastebin_urls.update(bing_crawler.run())
+                except Exception as e:
+                    print "[-] Error al ejecutar crawler de bing: "+str(e)
     except IndexError:
         print "[-] Número de argumentos no valido"
+        return -1
+
+def _save_data(command):
+    '''
+        Función para guardar los datos del programa
+        tanto las URLs como los resultados de seeker picker
+    '''
+    try:
+        command_list = command.split(" ")
+
+        what_save = command_list[1]
+
+        if what_save == "urls":
+            name = "urls_"+time.strftime("%Y-%m-%d_%H:%M")+".npy"
+            print "[!] Las urls se guardaran en %s" % (name)
+            aux = numpy.array(list(pastebin_urls))
+            aux.dump(open(name,'wb'))
+
+        elif what_save == "found":
+            name = "founds_"+time.strftime("%Y-%m-%d_%H:%M")+".json"
+            print "[!] Lo encontrado se guardará en %s" % name
+            with open(name,'wb') as outfile:
+                json.dumps(reconocimientos,outfile)
+        else:
+            print bad_save
+    except IndexError:
+        print "[-] Número de argumentos no valido"
+        print bad_save
+        return -1
+
+def _get_data(command):
+    '''
+        Función para cargar los datos de URL desde un 
+        archivo
+    '''
+    global pastebin_urls
+    try:
+        command_list = command.split(" ")
+
+        filenpy = command_list[1]
+
+        if os.path.isfile(filenpy):
+            try:
+                aux = list(numpy.load(open(filenpy,'rb')))
+                pastebin_urls.update(aux)
+            except Exception as e:
+                print "[-] ERROR cargando datos: "+str(e)
+                print "USAGE: get <urls file>"
+                return -1
+        else:
+            print "USAGE: get <urls file>"
+            return -1
+    except Exception as e:
+        print "[-] Número de argumentos no valido"
+        print "USAGE: get <urls file>"
         return -1
 
 
@@ -659,6 +782,18 @@ def main():
             try:
                 seeker_picker = Seeker_Picker(verbosity,pastebin_urls,regExs,emails,names,dnis,cadenas,use_tor)
                 reconocimientos = seeker_picker.run()
+            except Exception as e:
+                print "[-] Error en la shell: "+str(e)
+
+        elif command.startswith("save"):
+            try:
+                _save_data(command)
+            except Exception as e:
+                print "[-] Error en la shell: "+str(e)
+
+        elif command.startswith("get"):
+            try:
+                _get_data(command)
             except Exception as e:
                 print "[-] Error en la shell: "+str(e)
         else:
