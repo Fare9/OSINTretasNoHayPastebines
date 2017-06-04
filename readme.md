@@ -25,14 +25,22 @@ no da mucho pero bueno menos es nada
 archivo crawler: modules/_pastebin_crawlera.py
 
 ## BING
-futuro crawler para buscar enlaces en bing a través de búsquedas avanzadas.
+crawler para buscar en bing, cada una de las palabras que vienen en la variable de búsqueda
+al ir palabra por palabra, tardará bastante, pero conseguiremos amplios resultados de URLs.
 
-futuro archivo crawler: modules/_bing_crawlera.py
+archivo crawler: modules/_bing_crawlera.py
 
 ## Google
-futuro crawler para buscar enlaces en google a través de búsquedas avanzadas.
+crawler que hace uso de técnicas avanzadas de búsqueda, busca los términos de su variable
+de búsqueda. Puede conseguir bastantes resultados de gran calidad.
 
-futuro archivo crawler: modules/_google_crawlera.py
+archivo crawler: modules/_google_crawlera.py
+
+## seeker_picker
+módulo para la búsqueda de valores dentro del texto de las páginas de pastebin, tenemos
+distintas formas de búsqueda, cualquier problema por favor, reportadmelo para arregarlo.
+
+archivo: modules/_seeker_picker.py
 
 ### Requerimientos
 
@@ -45,4 +53,6 @@ tor
 selenium
 bs4
 notify2
+json
+numpy
 torrequest
