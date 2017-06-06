@@ -114,7 +114,7 @@ emails = []                 # emails a buscar
 names  = []                 # nombres a buscar
 dnis   = []                 # Documentos de identidad a buscar
 cadenas = []                # strings a buscar
-reconocimientos = {}        # lo que hemos encontrado en pastebin
+reconocimientos = []        # lo que hemos encontrado en pastebin
 
 verbosity = 1               # verbosidad del programa
 time_to_crawl = 10          # tiempo de crawling
@@ -733,7 +733,7 @@ def main():
         funcion principal que ejecutará la shell
         esta luego mandará los valores
     '''
-    
+    global reconocimientos
     
 
     os.system("clear")
@@ -779,11 +779,11 @@ def main():
                 print "[-] Error en la shell: "+str(e)
 
         elif command.startswith("search"):
-            try:
-                seeker_picker = Seeker_Picker(verbosity,pastebin_urls,regExs,emails,names,dnis,cadenas,use_tor)
-                reconocimientos = seeker_picker.run()
-            except Exception as e:
-                print "[-] Error en la shell: "+str(e)
+            #try:
+            seeker_picker = Seeker_Picker(verbosity,pastebin_urls,regExs,emails,names,dnis,cadenas,use_tor)
+            reconocimientos = seeker_picker.run()
+            #except Exception as e:
+            #    print "[-] Error en la shell: "+str(e)
 
         elif command.startswith("save"):
             try:

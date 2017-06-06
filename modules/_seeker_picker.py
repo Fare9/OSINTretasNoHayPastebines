@@ -109,7 +109,7 @@ class Seeker_Picker():
         self.cadenas = cadenas
         self.use_tor = use_tor
         notify2.init("OSINTretasNoHayPastebines")
-        self.retorned_dict = {}
+        self.retorned_dict = []
 
     def run(self):
         ''' Método principal '''
@@ -122,6 +122,8 @@ class Seeker_Picker():
         self.print_verbosity("[+] Finished module, returning dictionary",1)
 
         self.print_notification("Seeker_picker","Finished module")
+
+        self.print_verbosity("Se devuelve: "+str(self.retorned_dict),1)
 
         return self.retorned_dict
 
@@ -169,67 +171,39 @@ class Seeker_Picker():
                 self.print_verbosity("[+] URL: "+url+" get 200 code",2)
 
                 # buscamos expresiones regulares
-                self.retorned_dict['regExs'] = {}
                 for regEx in self.regExs:
                     pattern = re.compile(regEx)
 
                     retorno = pattern.match(code_page)
 
                     if retorno is not None:
-                        try:
-                            if type(self.retorned_dict['regExs'][regEx]) == 'list': 
-                                #si no es una lista o no es nada saltará error, y lo crearemos como una lista
-                                self.retorned_dict['regExs'][regEx].append(url)
-                        except:
-                            # esto saltará con la primera URL
-                            self.retorned_dict['regExs'][regEx] = []
-                            self.retorned_dict['regExs'][regEx].append(url)
+                        self.retorned_dict.append({'type':'regex',regEx:url})
                 # Fin de las expresiones regulares
 
                 # buscamos emails
-                self.retorned_dict['emails'] = {}
                 for email in self.emails:
                     if email in code_page:
-                        try:
-                            if type(self.retorned_dict['emails'][email]) == 'list':
-                                self.retorned_dict['emails'][email].append(url)
-                        except:
-                            self.retorned_dict['emails'][email] = []
-                            self.retorned_dict['emails'][email].append(url)
+                        self.retorned_dict.append({'type':'mail',email:url})
+                        
                 # Fin de los emails
                 # buscamos nombres
-                self.retorned_dict['names'] = {}
                 for name in self.names:
                     if name in code_page:
-                        try:
-                            if type(self.retorned_dict['names'][name]) == 'list':
-                                self.retorned_dict['names'][name].append(url)
-                        except:
-                            self.retorned_dict['names'][name] = []
-                            self.retorned_dict['names'][name].append(url)
+                        self.retorned_dict.append({'type':'name',name:url})
+                        
                 # Fin de nombres
                 # DNIs
-                self.retorned_dict['DNIs'] = {}
                 for dni in self.dnis:
                     if dni in code_page:
-                        try:
-                            if type(self.retorned_dict['DNIs'][dni]) == 'list':
-                                self.retorned_dict['DNIs'][dni].append(url)
-                        except:
-                            self.retorned_dict['DNIs'][dni] = []
-                            self.retorned_dict['DNIs'][dni].append(url)
+                        self.retorned_dict.append({'type':'dni',dni:url})
+                        
                 # Fin DNIs
                 # Cadenas
-                self.retorned_dict['strings'] = {}
                 for cadena in self.cadenas:
                     if cadena in code_page:
-                        try:
-                            if type(self.retorned_dict['strings'][cadena]) == 'list':
-                                self.retorned_dict['strings'][cadena].append(url)
-                        except:
-                            self.retorned_dict['strings'][cadena] = []
-                            self.retorned_dict['strings'][cadena].append(url)
+                        self.retorned_dict.append({'type':'string',cadena:url})
                 # Fin Cadenas
+
             else:
                 self.print_verbosity("[-] ERROR URL: "+url+" get "+str(response.status_code)+" code",0)
 
@@ -259,6 +233,6 @@ def show_notification(args):
 
 if __name__=='__main__':
 
-    sk = Seeker_Picker(3,['pastebin.com/skQpwccy'],[],[],[],[],['malware','exploit','IOC','pass','password','WWE','MOVIES'],True)
+    sk = Seeker_Picker(3,['pastebin.com/skQpwccy','pastebin.com/DLy22Puw'],[],[],[],[],['malware','exploit','IOC','pass','password','WWE','MOVIES'],True)
 
     print sk.run()
