@@ -688,7 +688,7 @@ def _save_data(command):
             aux = numpy.array(list(pastebin_urls))
             aux.dump(open(name,'wb'))
 
-        elif what_save == "found":
+        elif what_save == "founds":
             name = "founds_"+time.strftime("%Y-%m-%d_%H:%M")+".json"
             print "[!] Lo encontrado se guardará en %s" % name
             with open(name,'wb') as outfile:
