@@ -132,7 +132,7 @@ class GoogleCrawler(Base):
             self.textToFind += str(i) + "+"
 
         if self.textToFind[-1] == "+":
-            self.textToFind = self.textToFind[0-(len(self.textToFind)-1)]
+            self.textToFind = self.textToFind[:-1]
 
         self.process()
 
@@ -144,9 +144,9 @@ class GoogleCrawler(Base):
 
     def do_search(self):
         try:
-            
             urly = "https://www.google.es/search?num="+str(100)+"&start="+str(self.counter)+"&as_q=&as_epq=&as_oq="+self.textToFind+"&as_eq=&as_nlo=&as_nhi=&lr=&cr=&as_qdr=all&as_sitesearch=pastebin.com&as_occt=title&safe=images&as_filetype=&as_rights="
-        
+            
+            self.print_verbosity("[+] URL a buscar: "+urly,3)
             headers = {'User-Agent':self.userAgent}
 
             #realizamos esperas para evitar problemas con google
@@ -154,8 +154,8 @@ class GoogleCrawler(Base):
             r=requests.get(urly,headers=headers)
             time.sleep(random.randint(0,10))
 
+
             result = r.content 
-            self.print_verbosity("[+] Obtenido de google: "+str(result),3)
             pastebin_urls = set()
             bsObj =  BeautifulSoup(result,"html5lib")
 
