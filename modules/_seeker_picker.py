@@ -142,7 +142,10 @@ class Seeker_Picker():
 
             self.print_verbosity("[+] Requesting for pastebin url: "+url,3)
             if 'raw' not in url: # obtenemos la URL raw ya que así será más sencillo
-                urlRaw = 'https://' + url.split('/')[0] + "/raw/" + url.split('/')[1]
+                if ('http://' not in url) and ('https://' not in url):
+                    urlRaw = 'https://' + url.split('/')[0] + "/raw/" + url.split('/')[1]
+                else:
+                    urlRaw = 'https://pastebin.com/raw/'+url.split('pastebin.com/')[1]
 
             self.print_verbosity("[+] Requesting for pastebin raw url: "+urlRaw,3)
 
