@@ -167,7 +167,9 @@ class TwitterCrawler(Base):
         '''
         try:
             print "[+] Starting Twitter"
-            self.driver = webdriver.Firefox(executable_path='/opt/geckodriver')
+            caps = webdriver.DesiredCapabilities().FIREFOX
+            caps["marionette"] = False
+            self.driver = webdriver.Firefox(executable_path='/opt/geckodriver',capabilities = caps)
             self.driver.get("https://twitter.com/es")
             self.driver.maximize_window()
             time.sleep(5)
