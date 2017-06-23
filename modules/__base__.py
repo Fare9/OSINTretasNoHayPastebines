@@ -26,7 +26,10 @@ from threading import Thread
 from torrequest import TorRequest # para tor
 
 import requests
-import notify2
+try:
+    import notify2
+except:
+    print "[-] No fue posible importar notify2"
 import time
 
 class Base():
@@ -47,8 +50,10 @@ class Base():
         self.verbosity = verbosity
         self.time_to_crawl = time_to_crawl
         self.use_tor = use_tor
-        notify2.init("OSINTretasNoHayPastebines")
-
+        try:
+            notify2.init("OSINTretasNoHayPastebines")
+        except:
+            print "[-] No fue posible iniciar notify2"
     def run(self):
         pass
 
@@ -99,13 +104,16 @@ def show_notification(args):
     '''
         Para ejecutar en un hilo a parte
     '''
-    title = args[0]
-    message = args[1]
-    n = notify2.Notification(title,
-                     message,
-                     "Pastebin"   # Icon name
-                    )
-    n.show()
-    time.sleep(3)
-    n.close()
-    return
+    try:
+        title = args[0]
+        message = args[1]
+        n = notify2.Notification(title,
+                         message,
+                         "Pastebin"   # Icon name
+                        )
+        n.show()
+        time.sleep(3)
+        n.close()
+        return
+    except:
+        pass
