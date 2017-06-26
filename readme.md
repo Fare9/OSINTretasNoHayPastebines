@@ -56,3 +56,7 @@ notify2
 json
 numpy
 torrequest
+
+
+### Programador
+Fare9	<farenain9(at)gmail(dot)com>
