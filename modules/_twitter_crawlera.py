@@ -123,7 +123,8 @@ class TwitterCrawler(Base):
         self.urls_pastebin = []
         # cadenas para buscar en twitter
         if look_for is None:
-            self.look_for = ["pastebin.com","pastebin.com anonymous","exploit pastebin.com","@illegalFawn pastebin.com"]
+            options = PastebinConfig()['Twitter']
+            self.look_for = options["searches"].split(",")
         else:
             self.look_for = look_for
 

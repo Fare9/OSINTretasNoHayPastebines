@@ -155,6 +155,11 @@ class Seeker_Picker():
                         contador = 0 
                         response = tr.get(urlRaw)
                         while response.status_code != 200:
+                            # en caso de que no responda, puede ser cosa de tor
+                            # en ese caso reiniciamos el servicio y esperamos un 
+                            # par de segundos
+                            os.system("service tor restart")
+                            time.sleep(2)
                             response = tr.get(urlRaw)
                             contador += 1
                             if contador == 3:

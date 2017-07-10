@@ -111,7 +111,8 @@ class GoogleCrawler(Base):
         # Un user agent normalito
         self.userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:53.0) Gecko/20100101 Firefox/53.0"
         if searches is None:
-            self.searches = ["NSA","OSINT","IOC","Malware","Terrorism","ISIS","Anonymous","Exploit"]
+            options = PastebinConfig()['Google']
+            self.searches = options['searches'].split(",")
         else:
             self.searches = searches
 

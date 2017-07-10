@@ -102,7 +102,8 @@ class PastebinCrawler(Base):
         self.urls_pastebin = set()
 
         if urls_to_search is None:
-            self.urls_to_search = ["https://pastebin.com/archive","https://pastebin.com/trends"]
+            options = PastebinConfig()['Pastebin']
+            self.urls_to_search = options['searches'].split(",")
         else:
             self.urls_to_search = urls_to_search
 

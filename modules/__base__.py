@@ -24,6 +24,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from threading import Thread
 from torrequest import TorRequest # para tor
+from utilities.PastebinConfig import PastebinConfig
 
 import requests
 try:
@@ -88,8 +89,18 @@ class Base():
                 response_code = requests.get(url).status_code
             else:
                 with TorRequest() as tr:
+                    contador = 0
                     response_code = tr.get(url).status_code
-
+                    while response_code != 200:
+                        # en caso de que no responda, puede ser cosa de tor
+                        # en ese caso reiniciamos el servicio y esperamos un 
+                        # par de segundos
+                        os.system("service tor restart")
+                        time.sleep(2)
+                        response_code = tr.get(url).status_code
+                        contador += 1
+                        if contador == 3:
+                            break
             if response_code == 200:
                 self.print_verbosity("[+] EXISTE",3)
                 return True
