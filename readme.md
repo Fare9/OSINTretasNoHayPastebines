@@ -42,6 +42,12 @@ distintas formas de búsqueda, cualquier problema por favor, reportadmelo para a
 
 archivo: modules/_seeker_picker.py
 
+## Configuración de búsquedas
+a partir de un archivo config.ini, es posible actualizar lo que se buscará a través de los crawlers
+para ello sólo hay que modificar el archivo utilities/config.ini, y cada vez que se cargue el módulo
+con load, se realizarán búsquedas diferentes.
+
+
 ### Requerimientos
 
 #### Paquetes Linux
