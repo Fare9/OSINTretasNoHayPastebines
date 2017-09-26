@@ -36,6 +36,13 @@ de búsqueda. Puede conseguir bastantes resultados de gran calidad.
 
 archivo crawler: modules/_google_crawlera.py
 
+## DuckDuckGo
+crawler que hace uso de técnicas de búsqueda de DuckDuckGo, busca los términos de su variable
+de búsqueda. Puede conseguir muchísimos resultados, pero puede que no de tan buena calidad
+como Google o Bing.
+
+archivo crawler: modules/_duckduck_crawlera.py
+
 ## seeker_picker
 módulo para la búsqueda de valores dentro del texto de las páginas de pastebin, tenemos
 distintas formas de búsqueda, cualquier problema por favor, reportadmelo para arregarlo.
@@ -51,18 +58,18 @@ con load, se realizarán búsquedas diferentes.
 ### Requerimientos
 
 #### Paquetes Linux
-Python 2.7
-geckodriver dentro de la carpeta opt
-tor
+Python 2.7 <br />
+geckodriver (dentro de la carpeta opt) <br />
+tor <br />
 
 #### Paquetes python
-selenium
-bs4
-notify2
-json
-numpy
-torrequest
+selenium <br />
+bs4 <br />
+notify2 <br />
+json <br />
+numpy <br />
+torrequest <br />
 
 
 ### Programador
-Fare9	<farenain9(at)gmail(dot)com>
+Fare9	<farenain9(at)gmail(dot)com> <br />
