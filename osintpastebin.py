@@ -17,7 +17,9 @@ from modules._twitter_crawlera import TwitterCrawler
 from modules._seeker_picker import Seeker_Picker
 from modules._google_crawlera import GoogleCrawler
 from modules._bing_crawlera import BingCrawler
+from modules._duckduck_crawlera import DuckDuckCrawler
 from utilities.common_variables import logo_base
+
 import os
 import signal
 import sys
@@ -69,7 +71,8 @@ twitter_crawler = None
 pastebin_crawler = None
 google_crawler = None
 bing_crawler = None
-crawlers = ["twitter","pastebin","google","bing"]
+duck_crawler = None
+crawlers = ["twitter","pastebin","google","bing","duckduckgo"]
 
 
 
@@ -234,6 +237,9 @@ bad_load = '''
             - bing: módulo que ejecuta crawling en bing para conseguir
             enlaces de pastebin.
             Ejemplo:    load bing
+            - duckduckgo: módulo que ejecuta crawling en duck duck go
+            para conseguir enlaces de pastebin.
+            Ejemplo:    load duckduckgo
 '''
 
 bad_save = '''
@@ -530,7 +536,7 @@ def _load_crawlers(command):
     '''
         Función para cargar los crawlers con los objetos.
     '''
-    global twitter_crawler,pastebin_crawler,google_crawler,bing_crawler
+    global twitter_crawler,pastebin_crawler,google_crawler,bing_crawler,duck_crawler
 
     try:
         command_list = command.split(" ")
@@ -557,6 +563,9 @@ def _load_crawlers(command):
 
             elif crawler == "bing":
                 bing_crawler = BingCrawler(verbosity,pages_to_crawl,None,use_tor)
+
+            elif crawler == "duckduckgo":
+                duck_crawler = DuckDuckCrawler(verbosity,time_to_crawl,use_tor,None)
 
     except IndexError:
         print "[-] Número de argumentos no valido"
@@ -597,6 +606,12 @@ def _run_crawlers(command):
                     pastebin_urls.update(bing_crawler.run())
                 except Exception as e:
                     print "[-] Error al ejecutar crawler de bing: "+str(e)
+            elif crawler == "duckduckgo":
+                try:
+                    pastebin_urls.update(duck_crawler.run())
+                except Exception as e:
+                    print "[-] Error al ejecutar crawler de duck duck go: "+str(e)
+
     except IndexError:
         print "[-] Número de argumentos no valido"
         return -1
