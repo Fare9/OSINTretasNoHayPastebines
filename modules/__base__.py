@@ -26,6 +26,7 @@ from threading import Thread
 from torrequest import TorRequest # para tor
 from utilities.PastebinConfig import PastebinConfig
 
+import os
 import requests
 try:
     import notify2
