@@ -20,6 +20,7 @@ import sys
 import re
 import time
 import random
+import copy
 
 from torrequest import TorRequest # para tor
 
@@ -59,6 +60,7 @@ class DuckDuckCrawler(Base):
 
         self.print_verbosity("[+] URLs PASTEBIN: "+str(self.urls_pastebin),1)
         self.print_notification("DuckDuckGo crawler","Finalizado duck duck go crawler, se han obtenido "+str(len(self.urls_pastebin))+" urls")
+        return self.urls_pastebin
 
     def do_search(self):
         try:
@@ -77,7 +79,7 @@ class DuckDuckCrawler(Base):
             caps = webdriver.DesiredCapabilities().FIREFOX
             caps["marionette"] = False
             self.driver = webdriver.Firefox(executable_path='/opt/geckodriver',capabilities = caps)
-            self.driver.get("https://duckduckgo.com/?q="+search_string+"+site%3Apastebin.com&kp=-2&atb=v61-4&ia=web")
+            self.driver.get("https://duckduckgo.com/?q=\""+search_string+"\"+site%3Apastebin.com&kp=-2&atb=v61-4&ia=web")
             self.driver.maximize_window()
             time.sleep(5)
             return 0
@@ -126,7 +128,7 @@ class DuckDuckCrawler(Base):
         self.driver.quit()
 
     def checkea_urls(self):
-        urls = self.urls_pastebin
+        urls = copy.deepcopy(self.urls_pastebin)
         for url in urls:
             if not self.check_url(url):
                 self.urls_pastebin.remove(url)
